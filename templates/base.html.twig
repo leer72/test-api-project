@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+  {% block meta %}
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  {% endblock %}
+  <title>{% block title %}Test API Project{% endblock %}</title>
+
+  {% block stylesheets %}
+    {{ encore_entry_link_tags('app') }}
+  {% endblock %}
+</head>
+
+<body>
+
+  <div class="d-flex" id="wrapper">
+
+    <div id="page-content-wrapper">
+      {% block body %}{% endblock %}
+      
+      </div>
+    </div>
+  </div>
+
+{% block javascripts %}
+  {{ encore_entry_script_tags('app') }}
+{% endblock %}
+
+</body>
+
+</html>

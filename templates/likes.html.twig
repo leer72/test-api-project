@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+
+  <div class="container-fluid">
+    <h3 class="mt-4">{{ article.title }}</h3>
+    <div class="row">
+      
+      <div class="col-xl-8">
+        
+        <table class="table table-hover table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">#</th>
+              <th scope="col">Author</th>
+            </tr>
+          </thead>
+          <tbody>
+              {% for like in article.likes %}
+            <tr>
+              <th scope="row">{{ loop.index }}</th>
+              <td>{{ like.author.firstName }}</td>
+
+            </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Нет лайков</td>
+                </tr>
+            {% endfor %}
+            
+          </tbody>
+        
+        </table>
+       
+      </div>
+    </div>
+    
+  </div>
+{% endblock %}
