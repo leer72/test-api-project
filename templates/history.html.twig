@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+{% block body %}
+
+  <div class="container-fluid">
+    <h1 class="mt-4">История статей</h1>
+    <div class="row">
+      
+      <div class="col-xl-8">
+      <div class="input-group mb-3">
+      <a class="btn btn-primary" href="{{ path('app_article_create') }}" role="button">Создать статью</a>
+      </div>
+        <form>
+        <div class="input-group mb-3">
+        <select class="custom-select mr-sm-2" id="inlineFormCustomSelect" name="category">
+          <option {% if selectCategory is null %}selected{% endif %} value='' >Category</option>
+          {% for item in category %}
+          <option value="{{ item.id }}" {% if selectCategory == item.id %}selected{% endif %}>{{ item.title }}</option>
+          {% endfor %}
+        </select>
+          <div class="input-group-append">
+              <button type="submit" class="btn btn-outline-secondary"><i class="fa fa-search"></i></button>
+          </div>
+        </div>
+        </form>
+        <table class="table table-hover table-bordered">
+          <thead class="thead-light">
+            <tr>
+              <th scope="col">Id</th>
+              <th scope="col">Title</th>
+              <th scope="col">Category</th>
+              <th scope="col">Author</th>
+              <th scope="col">PublishedAt</th>
+              <th scope="col">Likes</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+              {% for article in articles %}
+            <tr>
+              <th scope="row">{{ article.id }}</th>
+              <td>{{ article.title }}</td>
+              <td>{{ article.category.title }}</td>
+              <td>{{ article.author.firstName }}</td>
+              <td>{{ article.publishedAt | format_datetime(locale='ru', timezone=false) }}</td>
+              <td>
+              
+              
+              <div
+                class="text-muted align-self-center ml-4 article-detail-hearts"
+                data-item="likes"
+                data-type="like"
+                data-like-href="{{ path('app_article_like', {id: article.id, type: 'like'}) }}"
+                data-dislike-href="{{ path('app_article_like', {id: article.id, type: 'dislike'}) }}"
+              >
+                <span data-item="likesCount">{{ article.likes | length }}</span> <i class="{% if article.id in likes %}fas{% else %}far{% endif %} fa-heart text-danger"></i></div>
+                </div>
+
+              {# <a href="#">
+              <i class="fas fa-heart"></i>
+              </a> 
+              <a href="{{ url('app_likes', {'id': article.id}) }}">{{ article.likes | length }}  #}
+              
+              </td>
+              <td><a href="{{ url('app_likes', {'id': article.id}) }}">Show likes</td></td>
+            </tr>
+            {% else %}
+                <tr>
+                    <td colspan="4">Нет статей</td>
+                </tr>
+            {% endfor %}
+            
+          </tbody>
+        
+        </table>
+        <nav aria-label="...">
+          <ul class="pagination">
+            {% for i in 1..pages %}
+              {% if i == page %}
+              <li class="page-item active">
+              <a class="page-link" href="{{ url('app_articles', {'page': i, 'category': selectCategory}) }}">{{ i }} <span class="sr-only">(current)</span></a>
+              </li>
+              {% else %}
+              <li class="page-item"><a class="page-link" href="{{ url('app_articles', {'page': i, 'category': selectCategory}) }}"> {{ i }}</a></li>
+              {% endif %}
+            {% endfor %}
+         </ul>
+        </nav>
+        {# {{ knp_pagination_render(pagination) }} #}
+        
+      </div>
+    </div>
+    
+  </div>
+{% endblock %}
