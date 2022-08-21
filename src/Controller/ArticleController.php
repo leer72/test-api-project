@@ -32,9 +32,12 @@ class ArticleController extends AbstractController
         $articles = $rawArticles['hydra:member'];
 
         $likes = [];
+        $author = $articlesProvider->getUserByEmail($this->getUser()->getEmail());
+        
+        $authorId = $author['hydra:member'][0]['id'];
         foreach($articles as $article) {
             foreach($article['likes'] as $like) {
-                if($like['author']['id'] == $this->getUser()->getId()) {
+                if($like['author']['id'] == $authorId) {
                     $likes[] = $article['id'];
                 }
             }
@@ -63,7 +66,7 @@ class ArticleController extends AbstractController
     /**
      * @Route("/article/create", name="app_article_create")
      */
-    public function createArticle(ArticlesProvider $articleProvider, Request $request): Response
+    public function createArticle(ArticlesProvider $articlesProvider, Request $request): Response
     {
         $form = $this->createForm(ArticleFormType::class);
 
@@ -73,8 +76,9 @@ class ArticleController extends AbstractController
         
         if ($form->isSubmitted() && $form->isValid()) {
             $article = $form->getData();
-            $article->author = $this->getUser()->getId();
-            $result = $articleProvider->postArticle($article);
+            $author = $articlesProvider->getUserByEmail($this->getUser()->getEmail());
+            $article->author = $author['hydra:member'][0]['id'];
+            $result = $articlesProvider->postArticle($article);
 
             if($result) {
                 

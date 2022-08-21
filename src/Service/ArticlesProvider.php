@@ -3,20 +3,26 @@
 namespace App\Service;
 
 use App\Form\Model\ArticleFormModel;
+use Symfony\Component\Security\Core\Security;
 use Symfony\Contracts\HttpClient\HttpClientInterface;
 
 class ArticlesProvider
 {
+    const BASE_URL = 'https://127.0.0.1:8000';
+    
     private $client;
 
-    public function __construct(HttpClientInterface $client)
+    private $security;
+
+    public function __construct(HttpClientInterface $client, Security $security)
     {
         $this->client = $client;
+        $this->security = $security;
     }
 
     public function fetchArticlesList(int $page = 1, ?int $categoryId = null)
     {
-        $url = 'https://127.0.0.1:8000/api/articles?page=' . $page;
+        $url = self::BASE_URL . '/api/articles?page=' . $page;
         
         if($categoryId) {
             $url .= '&category=' . $categoryId;
@@ -27,28 +33,28 @@ class ArticlesProvider
 
     public function fetchUsersList(int $page = 1, ?int $categoryId = null)
     {
-        $url = 'https://127.0.0.1:8000/api/users';
+        $url = self::BASE_URL . '/api/users';
         
         return $this->getData($url);
     }
 
     public function fetchCategoryList()
     {
-        $url = 'https://127.0.0.1:8000/api/categories';
+        $url = self::BASE_URL . '/api/categories';
         
         return $this->getData($url);
     }
 
     public function fetchArticle(int $id)
     {
-        $url = 'https://127.0.0.1:8000/api/articles/' . $id;
+        $url = self::BASE_URL . '/api/articles/' . $id;
         
         return $this->getData($url);
     }
 
     public function postArticle(ArticleFormModel $formModel)
     {
-        $url = 'https://127.0.0.1:8000/api/articles';
+        $url = self::BASE_URL . '/api/articles';
         
         $data = array(
             'title' => $formModel->title,
@@ -62,7 +68,7 @@ class ArticlesProvider
 
     public function postLike(int $userId, int $articleId)
     {
-        $url = 'https://127.0.0.1:8000/api/likes';
+        $url = self::BASE_URL . '/api/likes';
         
         $data = array(
             'author' => '/api/users/' . $userId,
@@ -74,16 +80,49 @@ class ArticlesProvider
 
     public function deleteLike(int $likeId)
     {
-        $url = 'https://127.0.0.1:8000/api/likes/' . $likeId;
+        $url = self::BASE_URL . '/api/likes/' . $likeId;
         
         return $this->deleteItem($url);
+    }
+
+    public function getToken(string $email, string $password)
+    {
+        $response = $this->client->request(
+            'POST',
+            self::BASE_URL . '/authentication_token',
+            [
+                'json' => array('email' => $email, 'password' => $password),
+            ]
+        );
+
+        if($response->getStatusCode() == 200) {
+            $content = $response->toArray();
+            
+            return $content['token'];
+        }
+        
+        return null;
+    }
+
+    public function getUserByEmail(string $email)
+    {
+        $url = self::BASE_URL . '/api/users';
+        
+        if($email) {
+            $url .= '?email=' . $email;
+        }
+
+        return $this->getData($url);
     }
     
     private function getData(string $url)
     {
         $response = $this->client->request(
             'GET',
-            $url
+            $url,
+            [
+                'auth_bearer' => $this->security->getUser()->getToken(),
+            ]
         );
         
         if($response->getStatusCode() > 299) {
@@ -92,7 +131,7 @@ class ArticlesProvider
         }
         
         $content = $response->toArray();
-       
+        
         return $content;
     }
 
@@ -103,6 +142,7 @@ class ArticlesProvider
             $url,
             [
                 'json' => $data,
+                'auth_bearer' => $this->security->getUser()->getToken(),
             ]
         );
 
@@ -113,7 +153,10 @@ class ArticlesProvider
     {
         $response = $this->client->request(
             'DELETE',
-            $url
+            $url,
+            [
+                'auth_bearer' => $this->security->getUser()->getToken(),
+            ]
         );
 
         return ($response->getStatusCode() > 299) ? false : true;

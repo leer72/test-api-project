@@ -2,33 +2,20 @@
 
 namespace App\Entity;
 
-use App\Repository\UserRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
+use App\Repository\ClientUserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
-use ApiPlatform\Core\Annotation\ApiResource;
-use Symfony\Component\Serializer\Annotation\Groups;
-use ApiPlatform\Core\Annotation\ApiFilter;
-use ApiPlatform\Core\Bridge\Doctrine\Orm\Filter\SearchFilter;
 
 /**
- * @ORM\Entity(repositoryClass=UserRepository::class)
- * @ApiResource(
- *   normalizationContext={"groups" = {"readUser"}},
- *   itemOperations={"get"},
- *   collectionOperations={"get"}
- * )
- * @ApiFilter(SearchFilter::class, properties={"email": "exact"})
+ * @ORM\Entity(repositoryClass=ClientUserRepository::class)
  */
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class ClientUser implements UserInterface, PasswordAuthenticatedUserInterface
 {
     /**
      * @ORM\Id
      * @ORM\GeneratedValue
      * @ORM\Column(type="integer")
-     * @Groups({"readUser", "readArticle"})
      */
     private $id;
 
@@ -50,25 +37,14 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
 
     /**
      * @ORM\Column(type="string", length=255, nullable=true)
-     * @Groups({"readUser", "readArticle"})
      */
     private $firstName;
 
     /**
-     * @ORM\OneToMany(targetEntity=Article::class, mappedBy="author")
+     * @ORM\Column(type="string", length=1024, nullable=true)
      */
-    private $articles;
+    private $token;
 
-    /**
-     * @ORM\OneToMany(targetEntity=Like::class, mappedBy="author")
-     */
-    private $likes;
-
-    public function __construct()
-    {
-        $this->articles = new ArrayCollection();
-        $this->likes = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -172,63 +148,22 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     }
 
     /**
-     * @return Collection<int, Article>
-     */
-    public function getArticles(): Collection
+     * Get the value of token
+     */ 
+    public function getToken()
     {
-        return $this->articles;
-    }
-
-    public function addArticle(Article $article): self
-    {
-        if (!$this->articles->contains($article)) {
-            $this->articles[] = $article;
-            $article->setAuthor($this);
-        }
-
-        return $this;
-    }
-
-    public function removeArticle(Article $article): self
-    {
-        if ($this->articles->removeElement($article)) {
-            // set the owning side to null (unless already changed)
-            if ($article->getAuthor() === $this) {
-                $article->setAuthor(null);
-            }
-        }
-
-        return $this;
+        return $this->token;
     }
 
     /**
-     * @return Collection<int, Like>
-     */
-    public function getLikes(): Collection
+     * Set the value of token
+     *
+     * @return  self
+     */ 
+    public function setToken($token)
     {
-        return $this->likes;
-    }
-
-    public function addLike(Like $like): self
-    {
-        if (!$this->likes->contains($like)) {
-            $this->likes[] = $like;
-            $like->setAuthor($this);
-        }
+        $this->token = $token;
 
         return $this;
     }
-
-    public function removeLike(Like $like): self
-    {
-        if ($this->likes->removeElement($like)) {
-            // set the owning side to null (unless already changed)
-            if ($like->getAuthor() === $this) {
-                $like->setAuthor(null);
-            }
-        }
-
-        return $this;
-    }
-
 }
