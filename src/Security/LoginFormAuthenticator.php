@@ -7,7 +7,9 @@ use Symfony\Component\Security\Core\Authentication\Token\TokenInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 use Symfony\Component\Security\Core\User\UserProviderInterface;
 use Symfony\Component\Security\Guard\Authenticator\AbstractFormLoginAuthenticator;
-use App\Repository\UserRepository;
+use App\Repository\ClientUserRepository;
+use App\Service\ArticlesProvider;
+use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
@@ -27,17 +29,23 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
     private $urlGenerator;
     private $csrfTokenManager;
     private $passwordEncoder;
+    private $articlesProvider;
+    private $em;
     
     public function __construct(
-        UserRepository $userRepository, 
+        ClientUserRepository $userRepository, 
         UrlGeneratorInterface $urlGenerator, 
         CsrfTokenManagerInterface $csrfTokenManager, 
-        UserPasswordEncoderInterface $passwordEncoder
+        UserPasswordEncoderInterface $passwordEncoder,
+        ArticlesProvider $articlesProvider,
+        EntityManagerInterface $em
     ) {
        $this->userRepository = $userRepository;
        $this->urlGenerator = $urlGenerator;
        $this->csrfTokenManager = $csrfTokenManager;
        $this->passwordEncoder = $passwordEncoder;
+       $this->articlesProvider = $articlesProvider;
+       $this->em = $em;
     }
     
     protected function getLoginUrl()
@@ -82,7 +90,20 @@ class LoginFormAuthenticator extends AbstractFormLoginAuthenticator
 
     public function checkCredentials($credentials, UserInterface $user)
     {
-        return $this->passwordEncoder->isPasswordValid($user, $credentials['password']) == $user->getPassword();
+        if($this->passwordEncoder->isPasswordValid($user, $credentials['password']) == $user->getPassword()) {
+            $token = $this->articlesProvider->getToken($credentials['email'], $credentials['password']);
+            
+            if($token) {
+                $user->setToken($token);
+
+                $this->em->persist($user);
+                $this->em->flush();
+
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     public function onAuthenticationSuccess(Request $request, TokenInterface $token, string $providerKey)

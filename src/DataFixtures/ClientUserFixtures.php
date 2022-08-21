@@ -2,11 +2,11 @@
 
 namespace App\DataFixtures;
 
-use App\Entity\User;
+use App\Entity\ClientUser;
 use Doctrine\Persistence\ObjectManager;
 use Symfony\Component\Security\Core\Encoder\UserPasswordEncoderInterface;
 
-class UserFixtures extends BaseFixtures
+class ClientUserFixtures extends BaseFixtures
 {
     private $passwordEncoder;
 
@@ -17,7 +17,7 @@ class UserFixtures extends BaseFixtures
     
     public function loadData(ObjectManager $manager)
     {
-        $this->create(User::class, function (User $user) use ($manager) {
+        $this->create(ClientUser::class, function (ClientUser $user) use ($manager) {
             $user
                 ->setfirstName('admin')
                 ->setEmail('admin@admin.ru')
@@ -25,14 +25,7 @@ class UserFixtures extends BaseFixtures
                 ->setRoles(['ROLE_ADMIN']);
             ;
         });
-        $this->createMany(User::class, 10, function (User $user) use ($manager) {
-            $user
-                ->setfirstName($this->faker->firstName())
-                ->setEmail($this->faker->email)
-                ->setPassword($this->passwordEncoder->encodePassword($user, '123456'));
-            ;
-        });
-
+        
         $manager->flush();
     }
 }

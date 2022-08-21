@@ -17,6 +17,12 @@ framework:
     php_errors:
         log: true
 
+    http_client:
+        scoped_clients:
+            example_api:
+                base_uri: 'https://127.0.0.1:8000/'
+                auth_bearer: the-bearer-token
+
 when@test:
     framework:
         test: true
